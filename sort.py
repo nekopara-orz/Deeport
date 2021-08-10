@@ -50,24 +50,26 @@ class KalmanFilter(object):
         self._std_weight_velocity = 1. / 160
 
     def initiate(self, measurement):
-        """Create track from unassociated measurement.
-
+        """初始化一个轨迹.
         Parameters
         ----------
         measurement : ndarray
-            Bounding box coordinates (x, y, a, h) with center position (x, y),
-            aspect ratio a, and height h.
+            测量出的边界框 Bounding box，
+            具体包含信息如下：
+            中心位置 (x, y),
+            长宽比 a,
+            高度 h,
 
         Returns
         -------
         (ndarray, ndarray)
-            Returns the mean vector (8 dimensional) and covariance matrix (8x8
-            dimensional) of the new track. Unobserved velocities are initialized
-            to 0 mean.
-
+            第一个返回值为一个8维的状态向量
+            第二个返回值为一个8*8的协方差矩阵，为对角矩阵
         """
         mean_pos = measurement
+        # 最开始速度信息初始化为0
         mean_vel = np.zeros_like(mean_pos)
+        # 按行去连接两个向量
         mean = np.r_[mean_pos, mean_vel]
 
         std = [
@@ -81,6 +83,50 @@ class KalmanFilter(object):
             10 * self._std_weight_velocity * measurement[3]]
         covariance = np.diag(np.square(std))
         return mean, covariance
+
+    def aas(self,a,b):
+        """
+
+        """
+
+        return b
+    def predict(self, mean, covariance):
+
+        """通过kalman滤波预测.
+
+        Parameters
+        ----------
+        mean : ndarray
+            一个8维的状态向量
+        covariance : ndarray
+           一个8*8的协方差矩阵，为对角矩阵
+
+
+        Returns
+        -------
+        (ndarray, ndarray)
+            返回预测的向量和协方差矩阵，违背观测的速度设置为0
+        """
+        std_pos = [
+            self._std_weight_position * mean[3],
+            self._std_weight_position * mean[3],
+            1e-2,
+            self._std_weight_position * mean[3]]
+        std_vel = [
+            self._std_weight_velocity * mean[3],
+            self._std_weight_velocity * mean[3],
+            1e-5,
+            self._std_weight_velocity * mean[3]]
+
+        # 按行去连接两个向量
+        motion_cov = np.diag(np.square(np.r_[std_pos, std_vel]))
+
+        mean = np.dot(self._motion_mat, mean)
+        covariance = np.linalg.multi_dot((
+            self._motion_mat, covariance, self._motion_mat.T)) + motion_cov
+
+        return mean, covariance
+
 
 if __name__ == '__main__':
     kalman = KalmanFilter()

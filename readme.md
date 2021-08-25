@@ -5,8 +5,4 @@
 > 中文翻译版: https://zhuanlan.zhihu.com/p/39912633 \
 ##1.初始化参数
 在运算前要对一些参数进行初始化一些参如协方差矩阵
-```latex
-f(x) = \int_{-\infty}^\infty
-    \hat f(\xi)\,e^{2 \pi i \xi x}
-    \,d\xi
-```
+
